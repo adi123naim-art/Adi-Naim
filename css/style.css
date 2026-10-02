@@ -1,0 +1,347 @@
+:root {
+  --wall: #f4f1ea;
+  --ink: #2e2a25;
+  --ink-soft: #6b645a;
+  --paper: #fbf7ec;
+  --photo: #fdfcf8;
+  --accent: #8a5a2b;
+  --gap: clamp(20px, 3.2vw, 44px);
+}
+
+* { box-sizing: border-box; }
+
+html { scrollbar-gutter: stable; }
+html.locked { overflow: hidden; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Heebo", system-ui, sans-serif;
+  color: var(--ink);
+  background-color: var(--wall);
+}
+
+/* ---------- כותרת ---------- */
+
+.site-header {
+  text-align: center;
+  padding: clamp(36px, 7vw, 80px) 20px clamp(20px, 4vw, 44px);
+}
+.site-header h1 {
+  max-width: 900px;
+  margin: 0 auto .6em;
+  font-family: "Rubik", "Heebo", sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.35rem, 3.6vw, 2.3rem);
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+/* ---------- פס תחתון ---------- */
+
+.site-footer {
+  background: #2f2b27;
+  color: #f3ecdc;
+  text-align: center;
+  padding: 26px 20px;
+  line-height: 1.7;
+}
+.site-footer p { margin: 0; }
+.site-footer span { color: #d9b98a; font-weight: 500; }
+.site-header p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: clamp(.95rem, 2vw, 1.1rem);
+}
+
+/* ---------- הקיר ---------- */
+
+/* כרטיסים מוטים ונייר דבק שעף לא יוצרים גלילה אופקית */
+main { overflow-x: clip; }
+
+.wall {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap);
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 10px clamp(18px, 4vw, 56px) 120px;
+}
+.col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+.col:nth-child(even) { margin-top: clamp(16px, 3vw, 46px); }
+
+.slot {
+  position: relative;
+  aspect-ratio: var(--ar, 1);
+}
+
+.empty {
+  text-align: center;
+  color: var(--ink-soft);
+  padding: 40px 20px;
+  width: 100%;
+}
+
+/* ---------- כרטיס ---------- */
+
+.card {
+  position: absolute;
+  inset: 0;
+  transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--rot, 0deg));
+  perspective: 1500px;
+  cursor: pointer;
+  transition: transform .25s ease;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+.card:focus-visible .front {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+}
+@media (hover: hover) {
+  .card:not(.lifted):hover {
+    transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(calc(var(--rot, 0deg) * .35)) scale(1.03);
+  }
+}
+.card.lifted {
+  position: fixed;
+  inset: auto;
+  z-index: 60;
+}
+
+.card-inner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+.card-inner.flipped { transform: rotateY(180deg); }
+.card.settled .card-inner { transition: transform .65s cubic-bezier(.3, .7, .2, 1); }
+
+.face {
+  position: absolute;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* חזית: נייר מודפס עם שוליים לבנים */
+.front {
+  inset: 0;
+  padding: 3.2%;
+  background: var(--photo);
+  box-shadow:
+    0 1px 1px rgba(40, 30, 20, .14),
+    0 8px 16px -6px rgba(40, 30, 20, .38);
+  container-type: inline-size;
+}
+.media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #d9d4c9;
+}
+.ph {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 4cqw;
+  background: var(--ph, #cfcac0);
+  color: #7a7469;
+}
+.ph svg { width: 22cqw; height: 22cqw; }
+.ph span { font-size: 9cqw; font-weight: 500; }
+
+/* גב: פתק נייר. יכול להיות גדול מהחזית כשהתוצר קטן (למשל בטלפון) */
+.back {
+  left: 50%;
+  top: 50%;
+  width: var(--bw, 100%);
+  height: var(--bh, 100%);
+  transform: translate(-50%, -50%) rotateY(180deg);
+  visibility: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* שורות המחברת נגללות עם הטקסט (local), וכל הטקסט בגב יושב על רשת של --line */
+  --line: 28px;
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 calc(var(--line) - 1px), rgba(120, 100, 70, .16) calc(var(--line) - 1px) var(--line)) 0 -5px local,
+    var(--paper);
+  box-shadow:
+    0 1px 1px rgba(40, 30, 20, .14),
+    0 14px 30px -8px rgba(20, 15, 10, .5);
+}
+.card.lifted .back { visibility: visible; }
+
+.note {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--line) clamp(18px, 4vw, 34px);
+  font-size: 1rem;
+  line-height: var(--line);
+}
+.note h3 {
+  margin: 0;
+  font-family: "Rubik", "Heebo", sans-serif;
+  font-weight: 500;
+  font-size: .82rem;
+  letter-spacing: .04em;
+  color: var(--accent);
+}
+.note section { margin-bottom: var(--line); }
+.note p { margin: 0; white-space: pre-line; }
+.note .tool { font-weight: 700; font-size: 1.1rem; }
+
+/* גובה התיבה הוא תמיד כפולה של --line, כדי שהטקסט שאחריה יישאר על השורות */
+.prompt-box {
+  background: #2f2b27;
+  color: #f3ecdc;
+  border-radius: 8px;
+  padding: calc(var(--line) / 2) 14px;
+  cursor: auto;
+}
+.prompt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: var(--line);
+}
+.prompt-box h3 { color: #d9b98a; }
+.prompt {
+  margin: 0;
+  max-height: calc(var(--line) * 8);
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+  font-size: .9rem;
+  line-height: var(--line);
+  text-align: start;
+  user-select: text;
+}
+.prompt:focus-visible { outline: 2px solid #d9b98a; outline-offset: 4px; }
+.copy {
+  font: inherit;
+  font-size: .82rem;
+  line-height: 1;
+  padding: 0 12px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid rgba(243, 236, 220, .4);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.copy:hover { background: rgba(243, 236, 220, .12); }
+.copy:focus-visible { outline: 2px solid #d9b98a; outline-offset: 2px; }
+
+.hint {
+  margin-top: var(--line) !important;
+  font-size: .82rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---------- נייר דבק ---------- */
+
+.tape {
+  position: absolute;
+  z-index: 2;
+  width: clamp(64px, 34%, 96px);
+  height: 26px;
+  margin: -13px 0 0 calc(clamp(64px, 34%, 96px) / -2);
+  transform: rotate(var(--tr, 0deg));
+  filter: drop-shadow(0 1px 1px rgba(40, 30, 20, .22));
+  pointer-events: none;
+}
+.tape::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(255, 255, 255, .28), transparent 40%, rgba(0, 0, 0, .05)),
+    var(--tc, rgba(232, 215, 170, .76));
+  clip-path: polygon(0 0, 3% 12%, 0 25%, 4% 38%, 1% 52%, 4% 66%, 0 80%, 3% 100%,
+    97% 100%, 100% 86%, 96% 70%, 99% 55%, 96% 40%, 100% 24%, 97% 10%, 100% 0);
+}
+
+.card.peeling .tape { animation: peel .34s ease-in forwards; }
+.card.sticking .tape { animation: stick .3s ease-out; }
+
+@keyframes peel {
+  0%   { transform: translate(0, 0) rotate(var(--tr)) rotateX(0deg) scale(1); opacity: 1; }
+  35%  { transform: translate(0, -7px) rotate(var(--tr)) rotateX(55deg) scale(1.08); opacity: 1; }
+  100% { transform: translate(var(--fx, 40px), 70px) rotate(calc(var(--tr) + var(--spin, 40deg))) rotateX(20deg) scale(.9); opacity: 0; }
+}
+@keyframes stick {
+  0%   { transform: translate(0, -16px) rotate(var(--tr)) scale(1.25); opacity: 0; }
+  70%  { transform: translate(0, 1px) rotate(var(--tr)) scale(.97); opacity: 1; }
+  100% { transform: translate(0, 0) rotate(var(--tr)) scale(1); opacity: 1; }
+}
+
+/* ---------- מצב תצוגה ---------- */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(28, 23, 18, .66);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .5s ease;
+}
+.backdrop.show { opacity: 1; pointer-events: auto; }
+
+.viewer-btn {
+  position: fixed;
+  z-index: 70;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 500 1rem "Heebo", sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+}
+.viewer-btn[hidden] { display: none; }
+.viewer-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.viewer-btn:focus-visible { outline: 3px solid #f0c98a; outline-offset: 3px; }
+.close-btn { top: 14px; inset-inline-end: 14px; }
+.flip-btn {
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 20px;
+}
+
+/* ---------- פחות תנועה ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .card { transition: none; }
+  .card.settled .card-inner { transition: none; }
+  .card.peeling .tape { animation: none; opacity: 0; }
+  .card.sticking .tape { animation: none; }
+  .backdrop { transition-duration: .2s; }
+}
